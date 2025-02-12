@@ -109,9 +109,19 @@ async def command_listener(client):
             pkt = await cmdresp.get()
             print(pkt)
         elif command == "force":
-            # have not gotten this to work, in android app it seems to be some 8 byte buffer with 2 ints in it - which I would think correspond to the log!
-            pkt = WhoopPacket(PacketType.COMMAND, 10, CommandNumber.FORCE_TRIM, data=struct.pack("<LL", 0, 0)).framed_packet()
-            await client.write_gatt_char(WHOOP_CHAR_CMD_TO_STRAP, pkt)
+            # from https://github.com/bWanShiTong/reverse-engineering-whoop-post/blob/master/README.md#erase-device
+            hex_strings = [
+                "aa10005723cf19fefefefefefefefe002f8744f6",
+                "aa10005723d219fefefefefefefefe00e30e2693",
+                "aa10005723d319fefefefefefefefe0023d1a852"
+            ]
+
+            for s in hex_strings:
+                data = bytes.fromhex(s)
+
+                pkt = WhoopPacket(PacketType.COMMAND, 10, CommandNumber.FORCE_TRIM, data=data).framed_packet()
+                await client.write_gatt_char(WHOOP_CHAR_CMD_TO_STRAP, data)
+
         elif command == "test":
             
             verbose = True
